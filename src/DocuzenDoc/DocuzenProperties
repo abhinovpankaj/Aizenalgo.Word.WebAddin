@@ -1,0 +1,11 @@
+class DocuzenProperties {
+    constructor(){
+
+    }
+    constructor(dvid, stoken,uid,logou) {
+    this.dvid = dvid;
+    this.stoken = stoken;
+    this.uid = uid;
+    this.logou = logou;
+  }
+}
