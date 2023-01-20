@@ -10,7 +10,7 @@
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
   <SupportUrl DefaultValue="https://www.contoso.com/help"/>
   <AppDomains>
-    <AppDomain>https://www.contoso.com</AppDomain>
+    <AppDomain>https://demo.aizenalgo.com</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Document"/>
@@ -30,8 +30,8 @@
           </GetStarted>
           <FunctionFile resid="Commands.Url"/>
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
-            <OfficeTab id="TabHome">
-              <Group id="CommandsGroup">
+            <CustomTab id="Docuzen.Tab1">
+              <Group id="Aizenalgo.CommandsGroup">
                 <Label resid="CommandsGroup.Label"/>
                 <Icon>
                   <bt:Image size="16" resid="Icon.16x16"/>
@@ -73,7 +73,7 @@
                   <!--Look at the FunctionFile.html page for reference on how to implement the function -->
                   <Action xsi:type="ExecuteFunction">
                     <!--Name of the function to call. This function needs to exist in the global DOM namespace of the function file-->
-                    <FunctionName>SaveDocument</FunctionName>
+                    <FunctionName>saveDocument</FunctionName>
                   </Action>
                 </Control>
                 <Control xsi:type="Button" id="Aizenalgo.Submit">
@@ -94,11 +94,12 @@
                   <!--Look at the FunctionFile.html page for reference on how to implement the function -->
                   <Action xsi:type="ExecuteFunction">
                     <!--Name of the function to call. This function needs to exist in the global DOM namespace of the function file-->
-                    <FunctionName>SubmitDocument</FunctionName>
+                    <FunctionName>submitDocument</FunctionName>
                   </Action>
                 </Control>
               </Group>
-            </OfficeTab>
+              <Label resid="Docuzen.Tab1.TabLabel" />
+            </CustomTab>
           </ExtensionPoint>
         </DesktopFormFactor>
       </Host>
@@ -108,6 +109,12 @@
         <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
         <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
         <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Aizenalgo.Submit.Icon16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
+        <bt:Image id="Aizenalgo.Submit.Icon32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
+        <bt:Image id="Aizenalgo.Submit.Icon80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Aizenalgo.Save.Icon16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
+        <bt:Image id="Aizenalgo.Save.Icon32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
+        <bt:Image id="Aizenalgo.Save.Icon80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
@@ -115,13 +122,18 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with your sample add-in!"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Docuzen add-in!"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Docuzen Commands"/>
         <bt:String id="TaskpaneButton.Label" DefaultValue="Show Taskpane"/>
+        <bt:String id="Aizenalgo.Submit.Label" DefaultValue="Submit"/>
+        <bt:String id="Aizenalgo.Save.Label" DefaultValue="Save"/>
+        <bt:String id="Docuzen.Tab1.TabLabel" DefaultValue="Docuzen Web"/>        
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description" DefaultValue="AizenAlgo add-in loaded succesfully. Go to the HOME tab and click the 'Show Taskpane' button to get started."/>
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane"/>
+        <bt:String id="Aizenalgo.Save.Tooltip" DefaultValue="Click to Save document to Aizenalgo server"/>
+        <bt:String id="Aizenalgo.Submit.Tooltip" DefaultValue="Click to Submit to Aizenalgo server"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

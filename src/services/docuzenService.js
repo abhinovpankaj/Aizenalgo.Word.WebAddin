@@ -1,8 +1,8 @@
-const AUTHENTICATIONBASEURL = "http://demo.aizenalgo.com:9016/api/WordProc/WordProcAuthentication";
-const  VERIFICATIONBASEURL = "http://demo.aizenalgo.com:9016/api/WordProc/WordProcSessionDetails";
+const AUTHENTICATIONBASEURL = "https://demo.aizenalgo.com:9016/api/WordProc/WordProcAuthentication";
+const VERIFICATIONBASEURL = "https://demo.aizenalgo.com:9016/api/WordProc/WordProcSessionDetails";
 
-const SubmitDocumentService = ({sessionId,docId,type,uploadFile,fileName}) => {
-    const endpoint = `${VERIFICATIONBASEURL}?SessionId=${sessionId}&DocID=${docId}&Mode=${type}`;
+const SubmitDocumentService = ({stoken,dvid,uploadFile,fileName},type) => {
+    const endpoint = `${VERIFICATIONBASEURL}?SessionId=${stoken}&DocID=${dvid}&Mode=${type}`;
     var dataArray = new FormData();
     dataArray.append("fileName", fileName);
     dataArray.append("file", uploadFile);
@@ -12,16 +12,17 @@ const SubmitDocumentService = ({sessionId,docId,type,uploadFile,fileName}) => {
        method: 'POST',
        body: dataArray,       
        headers: {
-          'Content-type': 'multipart/form-data',
+         'Access-Control-Allow-Origin': '*',          
        },
     })
-       .then((res) => {
-        console.log(res);
-        res.json();
+       .then(response => {
+         if (!response.ok) throw (`invalid response: ${response.status}`); 
+         return response.json()
     })
+    .then(data => console.log(data))
        
        .catch((err) => {
-          console.log(err.message);
+          console.log(err);
        });
  };
 

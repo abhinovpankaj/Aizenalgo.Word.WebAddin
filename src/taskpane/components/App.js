@@ -2,7 +2,6 @@ import * as React from "react";
 import PropTypes from "prop-types";
 import { DefaultButton } from "@fluentui/react";
 import Header from "./Header";
-import HeroList from "./HeroList";
 import Progress from "./Progress";
 import Login from "./Login";
 
