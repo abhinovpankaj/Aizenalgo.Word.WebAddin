@@ -5,11 +5,19 @@ const VERIFICATIONBASEURL = "https://demo.aizenalgo.com:9016/api/WordProc/WordPr
 
 
 let docProp= {};
+
 Office.onReady(() => {
   // If needed, Office.js is ready to be called
  //readCustomDocumentProperties();
   
 });
+
+// Create a function for writing to the status div.
+function updateStatus(message) {
+  // var statusInfo = $('#status');
+  // statusInfo[0].innerHTML += message + "<br/>";
+  console.log(message);
+}
 
 /**
  * Shows a notification when the add-in command is executed.
@@ -99,50 +107,116 @@ function getGlobal() {
 
 const g = getGlobal();
 
+//read doc
+async function createFile(path, name, type) {
+  let response = await fetch(path);
+  let data = await response.blob();
+  let metadata = {
+      type: type
+  };
+  return new File([data], name, metadata);
+}
 //services
 function SubmitDocumentService({stoken,dvid,uploadFile,fileName},type) {
 
   const endpoint = `${VERIFICATIONBASEURL}?SessionId=${stoken}&DocID=${dvid}&Mode=${type}`;
-  var dataArray = new FormData();
-  //dataArray.append("fileName", fileName);
-  dataArray.append("file", uploadFile);
+  
+  //create file
+  sendFile(endpoint);
+               
+}
+var fileData;
+// Get all of the content from  Word document in 100-KB chunks of text.
+function sendFile(endpoint) {
+  Office.context.document.getFileAsync("compressed",
+      { sliceSize: 4000000 },
+      function (result) {
 
+          if (result.status == Office.AsyncResultStatus.Succeeded) {
 
-  fetch(endpoint, {
-     method: 'POST',
-     body: dataArray, 
-     mode:'cors',   
-     headers: {
-       'access-control-allow-origin': '*',         
-     }
-  })
-     .then(response => {
-       if (!response.ok) throw (`invalid response: ${response.status}`); 
-       return response.json()
-  })
-  .then(data => console.log(data))
-     
-     .catch((err) => {
-        console.log(err);
-     });
+              // Get the File object from the result.
+              var myFile = result.value;
+              var state = {
+                  file: myFile,
+                  counter: 0,
+                  sliceCount: myFile.sliceCount
+              };
 
-    //  var result= new Promise(function (resolve, reject) {
-    //    fetch(endpoint,{
-    //           method: 'POST',
-    //           body: dataArray,       
-    //           headers: {
-    //             'Access-Control-Allow-Origin': '*',
-    //             'Accept':'/',          
-    //           }
-    //        })
-    //      .then(function (response){
-    //        return response.json();
-    //        }
-    //      )
-    //      .then(function (json) {
-    //        resolve(JSON.stringify(json.names));
-    //      })
-    //  });
+              updateStatus("Getting file of " + myFile.size + " bytes");
+              getSlice(state,endpoint);
+             
+          }
+          else {              
+              updateStatus(result.status);
+              //return Promise.reject("failure");
+          }
+      });
+}
+// Get a slice from the file and then call sendSlice.
+function getSlice(state,endpoint) {
+  state.file.getSliceAsync(state.counter, function (result) {
+      if (result.status == Office.AsyncResultStatus.Succeeded) {
+          updateStatus("Sending piece " + (state.counter + 1) + " of " + state.sliceCount);                   
+          sendSlice(result.value, state,endpoint);
+          
+      }
+      else {
+        
+        updateStatus(result.status);
+        return Promise.reject("failure");
+      }
+  });
+}
+function sendSlice(slice, state,endpoint) {
+  var data = slice.data;
+
+  if (data) {
+    
+    
+    // Create a new HTTP request. You need to send the request
+        // to a webpage that can receive a post.
+        var request = new XMLHttpRequest();
+
+        // Create a handler function to update the status
+        // when the request has been sent.
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {
+
+                updateStatus("Sent " + slice.size + " bytes.");
+                state.counter++;
+
+                if (state.counter < state.sliceCount) {
+                    getSlice(state);
+                }
+                else {
+                    closeFile(state);
+                }
+                console.log(request.response);
+            }
+        }
+
+        request.open("POST", endpoint);
+        request.setRequestHeader("Slice-Number", slice.index);
+
+        // Send the file as the body of an HTTP POST
+        // request to the web server.
+        request.send(data);
+  }
+  
+}
+function closeFile(state) {
+  // Close the file when you're done with it.
+  state.file.closeAsync(function (result) {
+
+      // If the result returns as a success, the
+      // file has been successfully closed.
+      if (result.status == "succeeded") {        
+          updateStatus("File closed.");
+      }
+      else {        
+        updateStatus("File couldn't be closed.");
+      }
+  });
 }
 
 // The add-in command functions need to be available in global scope
