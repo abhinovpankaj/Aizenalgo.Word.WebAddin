@@ -1,10 +1,4 @@
-//import SubmitDocumentService from '../services/docuzenService' 
-
-const AUTHENTICATIONBASEURL = "https://demo.aizenalgo.com:9016/api/WordProc/WordProcAuthentication";
-const VERIFICATIONBASEURL = "https://demo.aizenalgo.com:9016/api/WordProc/WordProcSessionDetails";
-
-
-let docProp= {};
+import {DocuzenSessionVerification} from '../services/docuzenService' 
 
 Office.onReady(() => {
   // If needed, Office.js is ready to be called
@@ -12,7 +6,7 @@ Office.onReady(() => {
   
 });
 
-// Create a function for writing to the status div.
+// Create a function for displaying on the Word Interface.
 function updateStatus(message) {
   // var statusInfo = $('#status');
   // statusInfo[0].innerHTML += message + "<br/>";
@@ -26,33 +20,24 @@ function updateStatus(message) {
 function submitDocument(event) {
   try {
       console.log("Inside submitDocument function");
-      readCustomDocumentProperties();
-      //console.log(Office.context.document.url);
-    
-      
+      readCustomDocumentProperties(2);      
   } catch (error) {
-    console.log(error);
-  }
-
-  // const message = {
-  //   type: Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage,
-  //   message: "Submitting Docuzen document.",
-  //   icon: "Icon.80x80",
-  //   persistent: false,
-  // };
-
-  // Show a notification message
-  //Office.context.mailbox.item.notificationMessages.replaceAsync("submitDocument", message);
-
+      console.log(error);
+  }  
   // Be sure to indicate when the add-in command function is complete
   event.completed();
 }
-function saveDocument(event) {
-  console.log("Inside save function");
- 
+function saveDocument(event) {  
+  try {
+    console.log("Inside saveDocument function");
+    readCustomDocumentProperties(1);      
+  } catch (error) {
+      console.log(error);
+  }
   event.completed();
 }
-function readCustomDocumentProperties() {
+
+function readCustomDocumentProperties(type) {
   console.log("Inside readcustom function,Commands.js");
   
    Word.run(async (context) => {
@@ -82,11 +67,10 @@ function readCustomDocumentProperties() {
       var uploadFilePath = Office.context.document.url;
       var pieces = uploadFilePath.split('\\');
       var filename = pieces[pieces.length-1];
-      docProp.fileName=  filename;
-      docProp.uploadFile = uploadFilePath;
+      docProp.fileName=  filename;      
       console.log(docProp) ;    
       
-      SubmitDocumentService(docProp,1);
+      SubmitFile(docProp,type);
     
     }
     catch(error){
@@ -108,18 +92,8 @@ function getGlobal() {
 const g = getGlobal();
 
 
-//services
-function SubmitDocumentService({stoken,dvid,uploadFile,fileName},type) {
-
-  const endpoint = `${VERIFICATIONBASEURL}?SessionId=${stoken}&DocID=${dvid}&Mode=${type}`;
-  
-  //create file
-  sendFile(endpoint);
-               
-}
-var fileData;
-// Get all of the content from  Word document in 100-KB chunks of text.
-function sendFile(endpoint) {
+// Get all of the content from  Word document in 4000-KB chunks of text.
+function SubmitFile(docprop,type) {
   Office.context.document.getFileAsync("compressed",
       { sliceSize: 4000000 },
       function (result) {
@@ -135,55 +109,65 @@ function sendFile(endpoint) {
               };
 
               updateStatus("Getting file of " + myFile.size + " bytes");
-              getSlice(state,endpoint);
+              getSlice(state,docprop,type);
              
           }
           else {              
-              updateStatus(result.status);
-              //return Promise.reject("failure");
+              updateStatus(result.status);              
           }
       });
 }
 // Get a slice from the file and then call sendSlice.
-function getSlice(state,endpoint) {
+function getSlice(state,docprop,type) {
   state.file.getSliceAsync(state.counter, function (result) {
       if (result.status == Office.AsyncResultStatus.Succeeded) {
           updateStatus("Sending piece " + (state.counter + 1) + " of " + state.sliceCount);                   
-          sendSlice(result.value, state,endpoint);
-          
+          sendSlice(result.value, state,docprop,type);          
       }
-      else {
-        
+      else {        
         updateStatus(result.status);
         return Promise.reject("failure");
       }
   });
 }
-function sendSlice(slice, state,endpoint) {
+function sendSlice(slice, state,docprop,type) {
   var data = slice.data;
-
   if (data) {
-    var file = new Blob([data], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
-    var formdata = new FormData();
-    formdata.append("file", file);
-    fetch(endpoint, {
-      method: 'POST',
-      body: formdata
-    })
-    .then(response => {
-      if (!response.ok) throw (`invalid response: ${response.status}`);
-          return response.json()
-      })
-    .then(data => console.log(data))
-    .catch((err) => {
-        console.log(err);
-      })
-      .finally(()=>{
-        closeFile(state);
-      });  
-  }
-  
+    // var file = new Blob([data], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+    // var formdata = new FormData();
+    // formdata.append("file", file);
+    // fetch(endpoint, {
+    //   method: 'POST',
+    //   body: formdata
+    // })
+    // .then(response => {
+    //   if (!response.ok) throw (`invalid response: ${response.status}`);
+    //       return response.json()
+    //   })
+    // .then(data => console.log(data))
+    // .catch((err) => {
+    //     console.log(err);
+    //   })
+    //   .finally(()=>{
+    //     closeFile(state);
+    //   });  
+    docprop.uploadFileData = data;
+    var result = DocuzenSessionVerification(docprop,type);
+    if(result){
+      if(result.MsgType==="Success"){
+        updateStatus("Document submitted successfully.")
+      }
+      else{
+        updateStatus("Document failed to be submitted.")
+      }
+    }
+    else{
+      updateStatus("Failed to submit the doc.")
+    }
+    closeFile(state);
+  }  
 }
+
 function closeFile(state) {
   // Close the file when you're done with it.
   state.file.closeAsync(function (result) {
