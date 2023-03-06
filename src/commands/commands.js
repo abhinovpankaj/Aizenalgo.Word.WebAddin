@@ -107,15 +107,7 @@ function getGlobal() {
 
 const g = getGlobal();
 
-//read doc
-async function createFile(path, name, type) {
-  let response = await fetch(path);
-  let data = await response.blob();
-  let metadata = {
-      type: type
-  };
-  return new File([data], name, metadata);
-}
+
 //services
 function SubmitDocumentService({stoken,dvid,uploadFile,fileName},type) {
 
@@ -171,36 +163,24 @@ function sendSlice(slice, state,endpoint) {
   var data = slice.data;
 
   if (data) {
-    
-    
-    // Create a new HTTP request. You need to send the request
-        // to a webpage that can receive a post.
-        var request = new XMLHttpRequest();
-
-        // Create a handler function to update the status
-        // when the request has been sent.
-        request.onreadystatechange = function () {
-            if (request.readyState == 4) {
-
-                updateStatus("Sent " + slice.size + " bytes.");
-                state.counter++;
-
-                if (state.counter < state.sliceCount) {
-                    getSlice(state);
-                }
-                else {
-                    closeFile(state);
-                }
-                console.log(request.response);
-            }
-        }
-
-        request.open("POST", endpoint);
-        request.setRequestHeader("Slice-Number", slice.index);
-
-        // Send the file as the body of an HTTP POST
-        // request to the web server.
-        request.send(data);
+    var file = new Blob([data], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+    var formdata = new FormData();
+    formdata.append("file", file);
+    fetch(endpoint, {
+      method: 'POST',
+      body: formdata
+    })
+    .then(response => {
+      if (!response.ok) throw (`invalid response: ${response.status}`);
+          return response.json()
+      })
+    .then(data => console.log(data))
+    .catch((err) => {
+        console.log(err);
+      })
+      .finally(()=>{
+        closeFile(state);
+      });  
   }
   
 }
