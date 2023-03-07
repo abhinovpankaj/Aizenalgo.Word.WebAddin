@@ -47,7 +47,7 @@ function readCustomDocumentProperties(type) {
   
     await context.sync();
     try{    
-
+      let docProp={};
       for (let i = 0; i < properties.items.length; i++){        
         if(properties.items[i].key=="DVId"){
           //isDocuzenDoc =true;
@@ -126,7 +126,7 @@ function getSlice(state,docprop,type) {
       }
       else {        
         updateStatus(result.status);
-        return Promise.reject("failure");
+        //return Promise.reject("failure");
       }
   });
 }
@@ -152,19 +152,27 @@ function sendSlice(slice, state,docprop,type) {
     //     closeFile(state);
     //   });  
     docprop.uploadFileData = data;
-    var result = DocuzenSessionVerification(docprop,type);
-    if(result){
-      if(result.MsgType==="Success"){
-        updateStatus("Document submitted successfully.")
+    DocuzenSessionVerification(docprop,type)
+    .then(result=>{
+      if(result){
+        console.log(result);
+        if(result.MsgType==="Success"){
+          updateStatus("Document submitted successfully.")
+        }
+        else{
+          updateStatus("Document failed to be submitted.")
+          //Show login window
+          
+        }
       }
       else{
-        updateStatus("Document failed to be submitted.")
+        updateStatus("Failed to submit the doc.")
       }
-    }
-    else{
-      updateStatus("Failed to submit the doc.")
-    }
-    closeFile(state);
+    })
+    .finally(()=>{
+      closeFile(state);
+    });
+    
   }  
 }
 
